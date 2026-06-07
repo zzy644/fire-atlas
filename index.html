@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>燎原 FIRE Atlas</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f9;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: rgba(255, 255, 255, 0.97);
+      --surface-soft: rgba(255, 255, 255, 0.68);
+      --border: rgba(148, 163, 184, 0.2);
+      --text: #0f172a;
+      --muted: #475569;
+      --muted-soft: #64748b;
+      --primary: #2563eb;
+      --secondary: #7c3aed;
+      --finance: #0f766e;
+      --investment: #6d28d9;
+      --health: #2563eb;
+      --life: #ea580c;
+      --growth: #4f46e5;
+      --danger: #b91c1c;
+      --shadow-lg: 0 28px 72px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 16px 36px rgba(15, 23, 42, 0.06);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+        radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 28%),
+        linear-gradient(180deg, #f7f9fc 0%, #edf2f9 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1440px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    .glass,
+    .hero,
+    .panel,
+    .metric-card,
+    .summary-card,
+    .trend-card,
+    .config-row,
+    .snapshot-table,
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .hero {
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+      filter: blur(10px);
+    }
+
+    .hero::before {
+      width: 240px;
+      height: 240px;
+      right: 48px;
+      top: -120px;
+      background: rgba(37, 99, 235, 0.12);
+    }
+
+    .hero::after {
+      width: 190px;
+      height: 190px;
+      left: 14%;
+      bottom: -76px;
+      background: rgba(124, 58, 237, 0.12);
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(36px, 6vw, 56px);
+      line-height: 1.02;
+      letter-spacing: -0.06em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 860px;
+      color: var(--muted);
+      line-height: 1.85;
+      font-size: 16px;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      justify-items: end;
+      min-width: 360px;
+    }
+
+    .hero-toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .segmented {
+      display: inline-flex;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .segment-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 11px 18px;
+      min-width: 128px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .segment-btn.active {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(124, 58, 237, 0.96));
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+    }
+
+    .segment-btn:hover,
+    .btn:hover,
+    .utility-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .utility-btn,
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn.primary,
+    .utility-btn.primary {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+    }
+
+    .btn.ghost,
+    .utility-btn.ghost {
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .btn.secondary {
+      background: rgba(15, 23, 42, 0.05);
+      color: var(--text);
+    }
+
+    .btn.danger {
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--danger);
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+    }
+
+    input[type="month"],
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: var(--surface-strong);
+      color: var(--text);
+      padding: 11px 13px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: rgba(37, 99, 235, 0.36);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      transform: translateY(-1px);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 92px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .summary-card {
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      min-height: 136px;
+    }
+
+    .summary-card::after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      right: -34px;
+      bottom: -64px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .summary-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .summary-value {
+      font-size: clamp(28px, 3vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1.04;
+    }
+
+    .summary-sub {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 250px;
+    }
+
+    .finance { color: var(--finance); }
+    .investment { color: var(--investment); }
+    .health { color: var(--health); }
+    .life { color: var(--life); }
+    .growth, .custom { color: var(--growth); }
+
+    .summary-card.finance,
+    .trend-card.finance { background: linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0.88)); }
+    .summary-card.investment,
+    .trend-card.investment { background: linear-gradient(180deg, rgba(124, 58, 237, 0.08), rgba(255, 255, 255, 0.88)); }
+    .summary-card.health,
+    .trend-card.health { background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.88)); }
+    .summary-card.life,
+    .trend-card.life { background: linear-gradient(180deg, rgba(234, 88, 12, 0.08), rgba(255, 255, 255, 0.88)); }
+    .summary-card.growth,
+    .trend-card.growth,
+    .trend-card.custom { background: linear-gradient(180deg, rgba(79, 70, 229, 0.08), rgba(255, 255, 255, 0.88)); }
+
+    .panel {
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+    }
+
+    .panel-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+      max-width: 720px;
+    }
+
+    .compact-toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .compact-toolbar .field {
+      min-width: 180px;
+    }
+
+    .module-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .module-block {
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--surface-soft);
+      padding: 14px;
+    }
+
+    .module-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .module-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .module-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .module-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.05);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card {
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 120px;
+      background: rgba(255, 255, 255, 0.76);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card.full {
+      grid-column: 1 / -1;
+      min-height: 140px;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .metric-title {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .metric-hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .metric-type {
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.05);
+      white-space: nowrap;
+    }
+
+    .score-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .score-chip {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: var(--surface-strong);
+      color: var(--text);
+      border-radius: 10px;
+      min-width: 38px;
+      padding: 8px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, color 0.18s ease;
+    }
+
+    .score-chip.active {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.34);
+      color: var(--primary);
+    }
+
+    .score-chip.clear {
+      min-width: auto;
+      color: var(--muted);
+    }
+
+    .memo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .dashboard-controls {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-controls .field {
+      min-width: 180px;
+    }
+
+    .chart-wrap {
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+      min-height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .metric-insights {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .insight-box {
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .insight-box .mini-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .insight-box .value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .trend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .trend-card {
+      border-radius: 20px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .trend-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .trend-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .trend-caption {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .trend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.05);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .trend-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .snapshot-table {
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .snapshot-row {
+      display: grid;
+      grid-template-columns: 0.9fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr 1.2fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 18px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      font-size: 14px;
+    }
+
+    .snapshot-row.header {
+      background: rgba(255, 255, 255, 0.9);
+      border-top: none;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+    }
+
+    .snapshot-row strong {
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .config-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .config-row {
+      border-radius: 16px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: auto 1.2fr 0.9fr 0.9fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .config-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .add-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .span-2 { grid-column: 1 / -1; }
+
+    .goal-hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .goal-box {
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.88));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .goal-box h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .goal-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 14px;
+    }
+
+    .goal-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .goal-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.05);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .goal-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .goal-table th,
+    .goal-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .goal-table th:first-child,
+    .goal-table td:first-child {
+      text-align: left;
+    }
+
+    .goal-table thead th {
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--muted-soft);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 12px;
+    }
+
+    .goal-table tbody tr.highlight {
+      background: rgba(15, 118, 110, 0.08);
+      font-weight: 700;
+    }
+
+    .empty {
+      width: 100%;
+      padding: 26px 18px;
+      text-align: center;
+      border-radius: 18px;
+      border: 1px dashed rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.38);
+      z-index: 30;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-card {
+      width: min(1120px, 100%);
+      max-height: min(88vh, 980px);
+      overflow: auto;
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .modal-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 780px;
+    }
+
+    .close-btn {
+      border: none;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.06);
+      color: var(--text);
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 14px;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 40;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1180px) {
+      .hero-top,
+      .goal-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid,
+      .metric-insights {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .trend-grid,
+      .memo-grid,
+      .add-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .config-row,
+      .snapshot-row {
+        grid-template-columns: 1fr;
+      }
+
+      .snapshot-row.header {
+        display: none;
+      }
+
+      .snapshot-row {
+        gap: 6px;
+      }
+
+      .snapshot-row > div::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted-soft);
+        margin-bottom: 4px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100vw - 16px, 100%);
+        padding-top: 14px;
+      }
+
+      .hero,
+      .panel,
+      .summary-card,
+      .trend-card,
+      .metric-card,
+      .modal-card,
+      .snapshot-table,
+      .config-row {
+        border-radius: 18px;
+      }
+
+      .hero-side,
+      .hero-actions,
+      .hero-toolbar {
+        justify-items: stretch;
+        justify-content: flex-start;
+        min-width: 0;
+      }
+
+      .segmented {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .segment-btn {
+        min-width: auto;
+        flex: 1;
+      }
+
+      .summary-grid,
+      .metric-insights {
+        grid-template-columns: 1fr;
+      }
+
+      .compact-toolbar,
+      .dashboard-controls,
+      .hero-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow">早退休 · 强自律 · 高自由</div>
+          <h1>燎原 FIRE Atlas</h1>
+          <p>
+            这是一套为提前构建自由人生而服务的个人驾驶系统。你记录现金流、投资收益、压力状态和身体执行力，不是为了把生活填满，而是为了更早拥有选择权：在足够清醒的自我管理中，稳步靠近早退休、时间自治和高度自由的人生结构。
+          </p>
+        </div>
+        <div class="hero-side">
+          <div class="segmented" id="viewSwitch">
+            <button class="segment-btn active" data-view="entry">月度详情</button>
+            <button class="segment-btn" data-view="dashboard">汇总分析</button>
+          </div>
+          <div class="hero-toolbar">
+            <button id="openGoalBtn" class="utility-btn ghost">目标</button>
+            <button id="openConfigBtn" class="utility-btn ghost">指标配置</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="entryView" class="view active">
+      <section id="focusSummary" class="summary-grid"></section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">月度详情</h2>
+            <p class="panel-subtitle">按模块录入本月关键指标。布局尽量紧凑，方便你在一个屏幕内完成主要信息更新。</p>
+          </div>
+          <div class="compact-toolbar">
+            <div class="field">
+              <label class="label" for="monthPicker">录入月份</label>
+              <input id="monthPicker" type="month" />
+            </div>
+            <button id="saveMonthBtn" class="btn primary" type="button">保存本月</button>
+            <button id="clearMonthBtn" class="btn secondary" type="button">清除本月</button>
+          </div>
+        </div>
+        <div id="moduleStack" class="module-stack"></div>
+        <div id="memoGrid" class="memo-grid"></div>
+      </section>
+    </section>
+
+    <section id="dashboardView" class="view">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">趋势探索</h2>
+            <p class="panel-subtitle">改用月度区间来分析趋势。你可以选择任意起止月份，聚焦某一阶段内的现金流、投资收益、身心状态与执行力变化。</p>
+          </div>
+          <div class="compact-toolbar">
+            <button id="exportBtn" class="btn primary" type="button">导出数据</button>
+          </div>
+        </div>
+        <div class="dashboard-controls">
+          <div class="field">
+            <label class="label" for="rangeStartSelect">开始月份</label>
+            <select id="rangeStartSelect"></select>
+          </div>
+          <div class="field">
+            <label class="label" for="rangeEndSelect">结束月份</label>
+            <select id="rangeEndSelect"></select>
+          </div>
+          <div class="field" style="min-width:220px;">
+            <label class="label" for="trendMetricSelect">分析指标</label>
+            <select id="trendMetricSelect"></select>
+          </div>
+        </div>
+        <div id="mainTrendChart" class="chart-wrap"></div>
+        <div id="metricInsights" class="metric-insights"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">指标趋势矩阵</h2>
+            <p class="panel-subtitle">矩阵会按你选定的月度区间，展示所有数值型指标的走势、最新值和环比变化，便于横向对照。</p>
+          </div>
+        </div>
+        <div id="trendGrid" class="trend-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">月度快照</h2>
+            <p class="panel-subtitle">每一行对应一个月，浓缩展示资产净值、投资收益、结余率、投资占收入比、锻炼次数与压力水平。</p>
+          </div>
+        </div>
+        <div id="snapshotTable" class="snapshot-table"></div>
+      </section>
+    </section>
+  </div>
+
+  <div id="goalModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 class="modal-title">500W 退休目标</h2>
+          <p class="modal-subtitle">目标不是抽象愿望，而是一张可执行的路径图：每三年涨薪 20%，每年储蓄率 50%，用更高质量的自我管理去换取更早的人生自由。</p>
+        </div>
+        <button class="close-btn" data-close-modal="goalModal">关闭</button>
+      </div>
+
+      <div class="goal-hero">
+        <div class="goal-box">
+          <h3>目标</h3>
+          <p>攒够 500W 后退休。不是为了逃离工作，而是为了拥有不被动出售时间的底气，能够自主决定生活节奏、工作方式与人生投入方向。</p>
+          <div class="goal-chips">
+            <span class="goal-chip">目标资产：500W</span>
+            <span class="goal-chip">每三年涨薪：20%</span>
+            <span class="goal-chip">每年储蓄率：50%</span>
+            <span class="goal-chip">预计第 18 年突破 500W</span>
+          </div>
+        </div>
+        <div class="goal-box">
+          <h3>路径</h3>
+          <p>用可复制的职业成长和稳定储蓄去累积自由度：让收入增长跑在欲望前面，让储蓄纪律成为底盘，让投资收益逐步接管未来的时间选择权。</p>
+          <div class="goal-chips">
+            <span class="goal-chip">收入增长优先</span>
+            <span class="goal-chip">消费纪律优先</span>
+            <span class="goal-chip">资产积累优先</span>
+          </div>
+        </div>
+      </div>
+
+      <table class="goal-table" id="goalTable"></table>
+    </div>
+  </div>
+
+  <div id="configModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 class="modal-title">指标配置</h2>
+          <p class="modal-subtitle">这里保留原来的全部配置能力：启用、停用、重命名、切换分类、切换类型、删除和新增指标。修改后录入页与驾驶舱会同步更新。</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="resetMetricsBtn" class="btn secondary">恢复默认</button>
+          <button class="close-btn" data-close-modal="configModal">关闭</button>
+        </div>
+      </div>
+
+      <div id="configList" class="config-list"></div>
+
+      <div>
+        <h3 class="panel-title" style="font-size:18px; margin-bottom:6px;">新增指标</h3>
+        <p class="panel-subtitle" style="margin-bottom:12px;">只需要填名称、分类和类型，就能扩展自己的记录系统。</p>
+        <form id="addMetricForm" class="add-grid">
+          <div class="span-2">
+            <label class="label" for="newMetricName">指标名称</label>
+            <input id="newMetricName" type="text" placeholder="例如：副业收入 / 保险支出 / 休闲天数" required />
+          </div>
+          <div>
+            <label class="label" for="newMetricCategory">分类</label>
+            <select id="newMetricCategory"></select>
+          </div>
+          <div>
+            <label class="label" for="newMetricType">类型</label>
+            <select id="newMetricType"></select>
+          </div>
+          <div class="span-2">
+            <label class="label" for="newMetricHint">提示语（可选）</label>
+            <input id="newMetricHint" type="text" placeholder="例如：记录本月额外副业入账" />
+          </div>
+          <div class="span-2">
+            <button class="btn primary" type="submit">添加指标</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "fire-atlas-tracker-v3";
+      const LEGACY_STORAGE_KEYS = [
+        "monthly-metrics-public-site-v2",
+        "monthly-metrics-public-site-v1"
+      ];
+      const CATEGORY_ORDER = ["finance", "investment", "health", "life", "growth", "custom"];
+      const CATEGORY_META = {
+        finance: { label: "财务", subtitle: "收入、支出、储蓄与现金流", className: "finance", color: "#0f766e" },
+        investment: { label: "投资", subtitle: "投资动作、收益与总资产净值", className: "investment", color: "#6d28d9" },
+        health: { label: "健康", subtitle: "锻炼、睡眠恢复与压力水平", className: "health", color: "#2563eb" },
+        life: { label: "生活", subtitle: "自由感、满意度与生活质量", className: "life", color: "#ea580c" },
+        growth: { label: "成长", subtitle: "学习投入与长期能力建设", className: "growth", color: "#4f46e5" },
+        custom: { label: "自定义", subtitle: "你自己定义的新指标", className: "custom", color: "#4f46e5" }
+      };
+      const TYPE_META = {
+        currency: { label: "金额", placeholder: "例如：12000" },
+        percent: { label: "百分比", placeholder: "例如：8.5" },
+        number: { label: "数值", placeholder: "例如：12" },
+        score: { label: "评分", placeholder: "1-10" },
+        text: { label: "文本", placeholder: "记录一句话" }
+      };
+      const DEFAULT_METRICS = [
+        { id: "after_tax_income", name: "税后收入", category: "finance", type: "currency", active: true, hint: "本月实际到账总收入" },
+        { id: "monthly_expense", name: "本月支出", category: "finance", type: "currency", active: true, hint: "本月全部消费和固定支出" },
+        { id: "monthly_investment", name: "本月新增投资", category: "investment", type: "currency", active: true, hint: "本月新投入的基金、ETF、股票等总额" },
+        { id: "monthly_investment_profit", name: "本月投资收益", category: "investment", type: "currency", active: true, hint: "本月投资账户实际浮盈或已实现收益" },
+        { id: "net_worth", name: "总资产净值", category: "investment", type: "currency", active: true, hint: "本月末全部净资产估值" },
+        { id: "exercise_count", name: "锻炼次数", category: "health", type: "number", active: true, hint: "本月完成的运动次数" },
+        { id: "stress_level", name: "压力水平", category: "health", type: "score", active: true, hint: "综合看本月压力状态，1 低 10 高" },
+        { id: "energy_score", name: "恢复感", category: "health", type: "score", active: true, hint: "综合睡眠、精力和恢复程度" },
+        { id: "life_score", name: "生活满意度", category: "life", type: "score", active: true, hint: "这个月整体生活状态如何" },
+        { id: "learning_hours", name: "学习投入小时", category: "growth", type: "number", active: true, hint: "本月学习、阅读、课程总时长" }
+      ];
+      const GOAL_PLAN = [
+        [1, 37.0, 27.75, 13.88, 13.88],
+        [2, 37.0, 27.75, 13.88, 28.17],
+        [3, 37.0, 27.75, 13.88, 42.89],
+        [4, 44.4, 33.3, 16.65, 60.82],
+        [5, 44.4, 33.3, 16.65, 79.30],
+        [6, 44.4, 33.3, 16.65, 98.33],
+        [7, 53.28, 39.96, 19.98, 121.26],
+        [8, 53.28, 39.96, 19.98, 144.87],
+        [9, 53.28, 39.96, 19.98, 169.20],
+        [10, 63.94, 47.95, 23.98, 198.25],
+        [11, 63.94, 47.95, 23.98, 228.18],
+        [12, 63.94, 47.95, 23.98, 259.00],
+        [13, 76.72, 57.54, 28.77, 295.54],
+        [14, 76.72, 57.54, 28.77, 333.18],
+        [15, 76.72, 57.54, 28.77, 371.94],
+        [16, 92.07, 69.05, 34.53, 417.63],
+        [17, 92.07, 69.05, 34.53, 464.68],
+        [18, 92.07, 69.05, 34.53, 513.15]
+      ];
+
+      const monthPicker = document.getElementById("monthPicker");
+      const saveMonthBtn = document.getElementById("saveMonthBtn");
+      const clearMonthBtn = document.getElementById("clearMonthBtn");
+      const exportBtn = document.getElementById("exportBtn");
+      const viewSwitch = document.getElementById("viewSwitch");
+      const entryView = document.getElementById("entryView");
+      const dashboardView = document.getElementById("dashboardView");
+      const focusSummary = document.getElementById("focusSummary");
+      const moduleStack = document.getElementById("moduleStack");
+      const memoGrid = document.getElementById("memoGrid");
+      const rangeStartSelect = document.getElementById("rangeStartSelect");
+      const rangeEndSelect = document.getElementById("rangeEndSelect");
+      const trendMetricSelect = document.getElementById("trendMetricSelect");
+      const mainTrendChart = document.getElementById("mainTrendChart");
+      const metricInsights = document.getElementById("metricInsights");
+      const trendGrid = document.getElementById("trendGrid");
+      const snapshotTable = document.getElementById("snapshotTable");
+      const openGoalBtn = document.getElementById("openGoalBtn");
+      const openConfigBtn = document.getElementById("openConfigBtn");
+      const goalModal = document.getElementById("goalModal");
+      const configModal = document.getElementById("configModal");
+      const goalTable = document.getElementById("goalTable");
+      const resetMetricsBtn = document.getElementById("resetMetricsBtn");
+      const configList = document.getElementById("configList");
+      const addMetricForm = document.getElementById("addMetricForm");
+      const newMetricName = document.getElementById("newMetricName");
+      const newMetricCategory = document.getElementById("newMetricCategory");
+      const newMetricType = document.getElementById("newMetricType");
+      const newMetricHint = document.getElementById("newMetricHint");
+      const toast = document.getElementById("toast");
+
+      let state = loadState();
+      let currentMonth = getCurrentMonthKey();
+      let activeView = "entry";
+      let selectedTrendMetricId = null;
+      let rangeStart = null;
+      let rangeEnd = null;
+      let toastTimer = null;
+
+      fillSelectOptions();
+      ensureRecord(currentMonth);
+      ensureSelectedTrendMetric();
+      syncRangeWithData();
+      bindEvents();
+      renderGoalTable();
+      render();
+
+      function bindEvents() {
+        viewSwitch.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-view]");
+          if (!button) return;
+          activeView = button.dataset.view;
+          renderView();
+        });
+
+        monthPicker.addEventListener("change", (event) => {
+          currentMonth = event.target.value || getCurrentMonthKey();
+          ensureRecord(currentMonth);
+          syncRangeWithData();
+          render();
+        });
+
+        rangeStartSelect.addEventListener("change", () => {
+          rangeStart = rangeStartSelect.value;
+          if (rangeStart > rangeEnd) rangeEnd = rangeStart;
+          renderDashboard();
+        });
+
+        rangeEndSelect.addEventListener("change", () => {
+          rangeEnd = rangeEndSelect.value;
+          if (rangeEnd < rangeStart) rangeStart = rangeEnd;
+          renderDashboard();
+        });
+
+        trendMetricSelect.addEventListener("change", () => {
+          selectedTrendMetricId = trendMetricSelect.value;
+          renderDashboard();
+        });
+
+        saveMonthBtn.addEventListener("click", () => {
+          persist(false, `${currentMonth} 已保存`);
+        });
+
+        clearMonthBtn.addEventListener("click", () => {
+          if (!window.confirm(`确认清除 ${currentMonth} 的全部录入内容吗？`)) return;
+          state.records[currentMonth] = { values: {}, memo: "", proud: "", adjust: "" };
+          render();
+          showToast(`${currentMonth} 已清除`);
+        });
+
+        exportBtn.addEventListener("click", exportData);
+
+        openGoalBtn.addEventListener("click", () => openModal(goalModal));
+        openConfigBtn.addEventListener("click", () => {
+          renderConfig();
+          openModal(configModal);
+        });
+
+        document.querySelectorAll("[data-close-modal]").forEach((button) => {
+          button.addEventListener("click", () => closeModal(document.getElementById(button.dataset.closeModal)));
+        });
+
+        [goalModal, configModal].forEach((modal) => {
+          modal.addEventListener("click", (event) => {
+            if (event.target === modal) closeModal(modal);
+          });
+        });
+
+        resetMetricsBtn.addEventListener("click", () => {
+          if (!window.confirm("确认恢复默认指标配置吗？新增指标会被移除，但月度数据会尽量保留。")) return;
+          state.metrics = clone(DEFAULT_METRICS);
+          ensureSelectedTrendMetric();
+          persist(false, "已恢复默认指标");
+          render();
+          renderConfig();
+        });
+
+        addMetricForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const name = newMetricName.value.trim();
+          if (!name) return;
+          state.metrics.push({
+            id: `metric_${Date.now()}_${Math.random().toString(16).slice(2, 7)}`,
+            name,
+            category: newMetricCategory.value,
+            type: newMetricType.value,
+            active: true,
+            hint: newMetricHint.value.trim()
+          });
+          addMetricForm.reset();
+          newMetricCategory.value = "finance";
+          newMetricType.value = "currency";
+          ensureSelectedTrendMetric();
+          persist(false, "已新增指标");
+          render();
+          renderConfig();
+        });
+      }
+
+      function loadState() {
+        const parse = (raw) => {
+          try { return JSON.parse(raw); } catch (error) { return null; }
+        };
+        const current = parse(localStorage.getItem(STORAGE_KEY));
+        if (current) return normalizeState(current);
+        for (const key of LEGACY_STORAGE_KEYS) {
+          const legacy = parse(localStorage.getItem(key));
+          if (legacy) return normalizeState(legacy);
+        }
+        return { metrics: clone(DEFAULT_METRICS), records: {} };
+      }
+
+      function normalizeState(value) {
+        return {
+          metrics: Array.isArray(value.metrics) && value.metrics.length ? value.metrics : clone(DEFAULT_METRICS),
+          records: value.records && typeof value.records === "object" ? value.records : {}
+        };
+      }
+
+      function persist(silent, message) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (!silent) showToast(message || "已保存");
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+      }
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function getCurrentMonthKey() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      function ensureRecord(month) {
+        if (!state.records[month]) state.records[month] = { values: {}, memo: "", proud: "", adjust: "" };
+        const record = state.records[month];
+        if (!record.values) record.values = {};
+        if (typeof record.memo !== "string") record.memo = "";
+        if (typeof record.proud !== "string") record.proud = "";
+        if (typeof record.adjust !== "string") record.adjust = "";
+      }
+
+      function getSortedMonths(desc = false) {
+        const months = Object.keys(state.records).sort((a, b) => a.localeCompare(b));
+        return desc ? months.reverse() : months;
+      }
+
+      function syncRangeWithData() {
+        const months = getSortedMonths(false);
+        if (!months.length) {
+          rangeStart = currentMonth;
+          rangeEnd = currentMonth;
+          return;
+        }
+        if (!rangeStart || !months.includes(rangeStart)) rangeStart = months[0];
+        if (!rangeEnd || !months.includes(rangeEnd)) rangeEnd = months[months.length - 1];
+        if (rangeStart > rangeEnd) rangeEnd = rangeStart;
+      }
+
+      function fillSelectOptions() {
+        newMetricCategory.innerHTML = Object.entries(CATEGORY_META)
+          .map(([value, meta]) => `<option value="${value}">${meta.label}</option>`)
+          .join("");
+        newMetricType.innerHTML = Object.entries(TYPE_META)
+          .map(([value, meta]) => `<option value="${value}">${meta.label}</option>`)
+          .join("");
+        newMetricCategory.value = "finance";
+        newMetricType.value = "currency";
+      }
+
+      function getSortedMetrics(activeOnly) {
+        return [...state.metrics]
+          .filter((metric) => activeOnly ? metric.active : true)
+          .sort((a, b) => {
+            const catGap = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+            if (catGap !== 0) return catGap;
+            return a.name.localeCompare(b.name, "zh-CN");
+          });
+      }
+
+      function getMetricById(id) {
+        return state.metrics.find((metric) => metric.id === id) || null;
+      }
+
+      function getTrendMetrics() {
+        return getSortedMetrics(true).filter((metric) => metric.type !== "text");
+      }
+
+      function ensureSelectedTrendMetric() {
+        const metrics = getTrendMetrics();
+        if (!metrics.length) {
+          selectedTrendMetricId = null;
+          return;
+        }
+        if (!metrics.some((metric) => metric.id === selectedTrendMetricId)) {
+          selectedTrendMetricId = metrics[0].id;
+        }
+      }
+
+      function getRecordValue(record, metricId) {
+        const value = record.values ? record.values[metricId] : undefined;
+        return value === undefined ? "" : value;
+      }
+
+      function getNumericValue(record, metricId) {
+        const raw = getRecordValue(record, metricId);
+        if (raw === "" || raw === null || raw === undefined) return null;
+        const value = Number(raw);
+        return Number.isFinite(value) ? value : null;
+      }
+
+      function calculateMonthSnapshot(record) {
+        const income = getNumericValue(record, "after_tax_income");
+        const expense = getNumericValue(record, "monthly_expense");
+        const investment = getNumericValue(record, "monthly_investment");
+        const netWorth = getNumericValue(record, "net_worth");
+        return {
+          savingsRate: income !== null && expense !== null && income !== 0 ? ((income - expense) / income) * 100 : null,
+          investIncomeRatio: income !== null && investment !== null && income !== 0 ? (investment / income) * 100 : null,
+          netWorth
+        };
+      }
+
+      function getRangeMonths() {
+        return getSortedMonths(false).filter((month) => month >= rangeStart && month <= rangeEnd);
+      }
+
+      function buildSeries(metric) {
+        return getRangeMonths()
+          .map((month) => {
+            const record = state.records[month];
+            const value = metric.type === "text" ? getRecordValue(record, metric.id) : getNumericValue(record, metric.id);
+            return { month, value };
+          })
+          .filter((item) => item.value !== null && item.value !== undefined && item.value !== "" && !Number.isNaN(item.value));
+      }
+
+      function getSeriesStats(series) {
+        if (!series.length) return { latest: null, previous: null, delta: null, average: null, months: 0 };
+        const latest = Number(series[series.length - 1].value);
+        const previous = series.length > 1 ? Number(series[series.length - 2].value) : null;
+        const average = series.reduce((sum, item) => sum + Number(item.value), 0) / series.length;
+        return {
+          latest,
+          previous,
+          delta: previous === null ? null : latest - previous,
+          average,
+          months: series.length
+        };
+      }
+
+      function formatMetricValue(metric, value) {
+        if (value === null || value === undefined || value === "" || Number.isNaN(value)) return "--";
+        if (metric.type === "currency") {
+          return new Intl.NumberFormat("zh-CN", {
+            style: "currency",
+            currency: "CNY",
+            maximumFractionDigits: Number(value) % 1 === 0 ? 0 : 2
+          }).format(Number(value));
+        }
+        if (metric.type === "percent") return `${Number(value).toFixed(1)}%`;
+        if (metric.type === "score") return `${Number(value).toFixed(0)} / 10`;
+        if (metric.type === "number") return Number(value).toLocaleString("zh-CN");
+        return String(value);
+      }
+
+      function formatDelta(metric, value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "--";
+        const prefix = value > 0 ? "+" : "";
+        return `${prefix}${formatMetricValue(metric, value)}`;
+      }
+
+      function render() {
+        monthPicker.value = currentMonth;
+        renderView();
+        renderEntry();
+        renderDashboard();
+        persist(true);
+      }
+
+      function renderView() {
+        entryView.classList.toggle("active", activeView === "entry");
+        dashboardView.classList.toggle("active", activeView === "dashboard");
+        viewSwitch.querySelectorAll("[data-view]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.view === activeView);
+        });
+      }
+
+      function renderEntry() {
+        renderFocusSummary();
+        renderModules();
+        renderMemoSection();
+      }
+
+      function renderFocusSummary() {
+        const record = state.records[currentMonth];
+        const cards = [
+          {
+            metric: getMetricById("net_worth") || { type: "currency", category: "investment", name: "总资产净值" },
+            value: getNumericValue(record, "net_worth"),
+            label: "总资产净值",
+            sub: "作为你的自由度底盘，优先看它是否稳定上行。"
+          },
+          {
+            metric: getMetricById("monthly_investment_profit") || { type: "currency", category: "investment", name: "本月投资收益" },
+            value: getNumericValue(record, "monthly_investment_profit"),
+            label: "本月投资收益",
+            sub: "观察本月投资系统给你的时间复利带来了多少增量。"
+          },
+          {
+            metric: getMetricById("exercise_count") || { type: "number", category: "health", name: "锻炼次数" },
+            value: getNumericValue(record, "exercise_count"),
+            label: "锻炼次数",
+            sub: "自由生活离不开稳定体能，执行力要落在身体上。"
+          },
+          {
+            metric: getMetricById("stress_level") || { type: "score", category: "health", name: "压力水平" },
+            value: getNumericValue(record, "stress_level"),
+            label: "压力水平",
+            sub: "越接近长期自由，越需要监控自己的心理负荷。"
+          }
+        ];
+
+        focusSummary.innerHTML = cards.map((item) => {
+          const category = CATEGORY_META[item.metric.category] || CATEGORY_META.custom;
+          return `
+            <article class="summary-card ${category.className}">
+              <div class="summary-label">${item.label}</div>
+              <div class="summary-value">${formatMetricValue(item.metric, item.value)}</div>
+              <div class="summary-sub">${item.sub}</div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function renderModules() {
+        const groups = {};
+        getSortedMetrics(true).forEach((metric) => {
+          if (!groups[metric.category]) groups[metric.category] = [];
+          groups[metric.category].push(metric);
+        });
+
+        moduleStack.innerHTML = CATEGORY_ORDER
+          .filter((category) => groups[category] && groups[category].length)
+          .map((category) => {
+            const meta = CATEGORY_META[category];
+            return `
+              <section class="module-block">
+                <div class="module-head">
+                  <div>
+                    <h3 class="module-title ${meta.className}">${meta.label}</h3>
+                    <div class="module-subtitle">${meta.subtitle}</div>
+                  </div>
+                  <div class="module-tag ${meta.className}">${groups[category].length} 个指标</div>
+                </div>
+                <div class="metric-grid">
+                  ${groups[category].map((metric) => renderMetricCard(metric)).join("")}
+                </div>
+              </section>
+            `;
+          })
+          .join("");
+
+        bindMetricInputs();
+      }
+
+      function renderMetricCard(metric) {
+        const record = state.records[currentMonth];
+        const value = getRecordValue(record, metric.id);
+        const inputHtml = metric.type === "score"
+          ? renderScoreRow(metric.id, value)
+          : metric.type === "text"
+            ? `<textarea data-metric-id="${metric.id}" data-metric-type="text" placeholder="${TYPE_META[metric.type].placeholder}">${escapeHtml(String(value))}</textarea>`
+            : `<input data-metric-id="${metric.id}" data-metric-type="${metric.type}" type="number" step="${metric.type === "percent" ? "0.1" : "any"}" placeholder="${TYPE_META[metric.type].placeholder}" value="${escapeAttribute(String(value))}" />`;
+        return `
+          <article class="metric-card ${metric.type === "text" ? "full" : ""}">
+            <div class="metric-top">
+              <div>
+                <div class="metric-title">${escapeHtml(metric.name)}</div>
+                <div class="metric-hint">${escapeHtml(metric.hint || "可在指标配置里继续修改")}</div>
+              </div>
+              <div class="metric-type">${TYPE_META[metric.type].label}</div>
+            </div>
+            <div>${inputHtml}</div>
+          </article>
+        `;
+      }
+
+      function renderScoreRow(metricId, currentValue) {
+        const current = Number(currentValue);
+        const chips = Array.from({ length: 10 }, (_, index) => {
+          const score = index + 1;
+          return `<button type="button" class="score-chip ${current === score ? "active" : ""}" data-score-id="${metricId}" data-score-value="${score}">${score}</button>`;
+        }).join("");
+        return `<div class="score-row">${chips}<button type="button" class="score-chip clear" data-score-id="${metricId}" data-score-value="">清空</button></div>`;
+      }
+
+      function bindMetricInputs() {
+        document.querySelectorAll("[data-metric-id]").forEach((element) => {
+          element.addEventListener("input", (event) => {
+            state.records[currentMonth].values[event.target.dataset.metricId] = event.target.value;
+            persist(true);
+            renderFocusSummary();
+            renderDashboard();
+          });
+        });
+
+        document.querySelectorAll("[data-score-id]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.records[currentMonth].values[button.dataset.scoreId] = button.dataset.scoreValue;
+            persist(true);
+            renderEntry();
+            renderDashboard();
+          });
+        });
+      }
+
+      function renderMemoSection() {
+        const record = state.records[currentMonth];
+        memoGrid.innerHTML = `
+          <div>
+            <label class="label" for="memoInput">本月一句话</label>
+            <input id="memoInput" type="text" placeholder="例如：资产继续上行，压力略高，需要稳住节奏。" value="${escapeAttribute(record.memo)}" />
+          </div>
+          <div>
+            <label class="label" for="proudInput">本月最满意的一件事</label>
+            <input id="proudInput" type="text" placeholder="例如：完成了固定定投和规律锻炼。" value="${escapeAttribute(record.proud)}" />
+          </div>
+          <div>
+            <label class="label" for="adjustInput">下个月最想调整的一件事</label>
+            <input id="adjustInput" type="text" placeholder="例如：继续压低临时起意消费。" value="${escapeAttribute(record.adjust)}" />
+          </div>
+        `;
+        document.getElementById("memoInput").addEventListener("input", (event) => {
+          state.records[currentMonth].memo = event.target.value;
+          persist(true);
+          renderDashboard();
+        });
+        document.getElementById("proudInput").addEventListener("input", (event) => {
+          state.records[currentMonth].proud = event.target.value;
+          persist(true);
+          renderDashboard();
+        });
+        document.getElementById("adjustInput").addEventListener("input", (event) => {
+          state.records[currentMonth].adjust = event.target.value;
+          persist(true);
+          renderDashboard();
+        });
+      }
+
+      function renderDashboard() {
+        syncRangeWithData();
+        renderRangeSelectors();
+        renderTrendSelect();
+        renderTrendExploration();
+        renderTrendMatrix();
+        renderSnapshotTable();
+      }
+
+      function renderRangeSelectors() {
+        const months = getSortedMonths(false);
+        const options = months.length
+          ? months.map((month) => `<option value="${month}">${month}</option>`).join("")
+          : `<option value="${currentMonth}">${currentMonth}</option>`;
+        rangeStartSelect.innerHTML = options;
+        rangeEndSelect.innerHTML = options;
+        rangeStartSelect.value = rangeStart;
+        rangeEndSelect.value = rangeEnd;
+      }
+
+      function renderTrendSelect() {
+        const metrics = getTrendMetrics();
+        if (!metrics.length) {
+          trendMetricSelect.innerHTML = `<option value="">暂无数值型指标</option>`;
+          return;
+        }
+        trendMetricSelect.innerHTML = metrics
+          .map((metric) => `<option value="${metric.id}" ${metric.id === selectedTrendMetricId ? "selected" : ""}>${metric.name}</option>`)
+          .join("");
+      }
+
+      function renderTrendExploration() {
+        const metric = getMetricById(selectedTrendMetricId);
+        if (!metric) {
+          mainTrendChart.innerHTML = '<div class="empty">请至少保留一个数值型指标，驾驶舱才能展示趋势。</div>';
+          metricInsights.innerHTML = '';
+          return;
+        }
+        const series = buildSeries(metric);
+        const stats = getSeriesStats(series);
+        mainTrendChart.innerHTML = series.length
+          ? createLargeChartSvg(metric, series)
+          : '<div class="empty">当前月度区间内没有这项指标的数据。尝试切换区间，或先去录入页补充记录。</div>';
+        metricInsights.innerHTML = [
+          { label: "最新值", value: formatMetricValue(metric, stats.latest) },
+          { label: "环比变化", value: formatDelta(metric, stats.delta) },
+          { label: "区间均值", value: stats.average === null ? "--" : formatMetricValue(metric, stats.average) },
+          { label: "覆盖月份", value: `${stats.months} 个月` }
+        ].map((item) => `
+          <div class="insight-box">
+            <div class="mini-label">${item.label}</div>
+            <div class="value">${item.value}</div>
+          </div>
+        `).join("");
+      }
+
+      function renderTrendMatrix() {
+        const metrics = getTrendMetrics();
+        if (!metrics.length) {
+          trendGrid.innerHTML = '<div class="empty">暂无可展示趋势的指标。</div>';
+          return;
+        }
+        trendGrid.innerHTML = metrics.map((metric) => {
+          const series = buildSeries(metric);
+          const stats = getSeriesStats(series);
+          const category = CATEGORY_META[metric.category] || CATEGORY_META.custom;
+          return `
+            <article class="trend-card ${category.className}" data-trend-card="${metric.id}">
+              <div class="trend-top">
+                <div>
+                  <div class="trend-title">${escapeHtml(metric.name)}</div>
+                  <div class="trend-caption">${escapeHtml(metric.hint || category.subtitle)}</div>
+                </div>
+                <div class="trend-chip">${category.label}</div>
+              </div>
+              <div>${series.length ? createSparklineSvg(metric, series, category.color) : '<div class="empty">暂无数据</div>'}</div>
+              <div class="trend-meta">
+                <span>最新值：${formatMetricValue(metric, stats.latest)}</span>
+                <span>环比：${formatDelta(metric, stats.delta)}</span>
+                <span>${stats.months} 个月</span>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        document.querySelectorAll("[data-trend-card]").forEach((card) => {
+          card.addEventListener("click", () => {
+            selectedTrendMetricId = card.dataset.trendCard;
+            renderDashboard();
+          });
+        });
+      }
+
+      function renderSnapshotTable() {
+        const months = getSortedMonths(true);
+        if (!months.length) {
+          snapshotTable.innerHTML = '<div class="empty">开始记录后，这里会出现按月排列的快照数据。</div>';
+          return;
+        }
+        const header = `
+          <div class="snapshot-row header">
+            <div>月份</div>
+            <div>总资产净值</div>
+            <div>本月投资收益</div>
+            <div>结余率</div>
+            <div>投资占收入比</div>
+            <div>锻炼次数</div>
+            <div>压力水平</div>
+            <div>备注</div>
+          </div>
+        `;
+        const rows = months.map((month) => {
+          const record = state.records[month];
+          const snapshot = calculateMonthSnapshot(record);
+          return `
+            <div class="snapshot-row">
+              <div data-label="月份"><strong>${month}</strong></div>
+              <div data-label="总资产净值">${formatMetricValue({ type: 'currency' }, snapshot.netWorth)}</div>
+              <div data-label="本月投资收益">${formatMetricValue({ type: 'currency' }, getNumericValue(record, 'monthly_investment_profit'))}</div>
+              <div data-label="结余率">${snapshot.savingsRate === null ? '--' : `${snapshot.savingsRate.toFixed(1)}%`}</div>
+              <div data-label="投资占收入比">${snapshot.investIncomeRatio === null ? '--' : `${snapshot.investIncomeRatio.toFixed(1)}%`}</div>
+              <div data-label="锻炼次数">${formatMetricValue({ type: 'number' }, getNumericValue(record, 'exercise_count'))}</div>
+              <div data-label="压力水平">${formatMetricValue({ type: 'score' }, getNumericValue(record, 'stress_level'))}</div>
+              <div data-label="备注">${escapeHtml(record.memo || record.proud || '--')}</div>
+            </div>
+          `;
+        }).join("");
+        snapshotTable.innerHTML = header + rows;
+      }
+
+      function renderGoalTable() {
+        goalTable.innerHTML = `
+          <thead>
+            <tr>
+              <th>第几年</th>
+              <th>税前年收入（W）</th>
+              <th>预估税后（W）</th>
+              <th>当年储蓄（W）</th>
+              <th>年末累计资产（W）</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${GOAL_PLAN.map((row) => `
+              <tr class="${row[4] >= 500 ? 'highlight' : ''}">
+                <td>${row[0]}</td>
+                <td>${row[1].toFixed(2)}</td>
+                <td>${row[2].toFixed(2)}</td>
+                <td>${row[3].toFixed(2)}</td>
+                <td>${row[4].toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+      }
+
+      function renderConfig() {
+        const metrics = getSortedMetrics(false);
+        configList.innerHTML = metrics.map((metric) => `
+          <div class="config-row">
+            <label><input type="checkbox" data-config-active="${metric.id}" ${metric.active ? 'checked' : ''} /></label>
+            <input type="text" data-config-name="${metric.id}" value="${escapeAttribute(metric.name)}" />
+            <select data-config-category="${metric.id}">${renderCategoryOptions(metric.category)}</select>
+            <select data-config-type="${metric.id}">${renderTypeOptions(metric.type)}</select>
+            <button class="btn danger" type="button" data-config-delete="${metric.id}">删除</button>
+          </div>
+        `).join('');
+        bindConfigInputs();
+      }
+
+      function bindConfigInputs() {
+        document.querySelectorAll('[data-config-active]').forEach((element) => {
+          element.addEventListener('change', () => {
+            const metric = getMetricById(element.dataset.configActive);
+            if (!metric) return;
+            metric.active = element.checked;
+            ensureSelectedTrendMetric();
+            persist(false, '指标启用状态已更新');
+            render();
+            renderConfig();
+          });
+        });
+
+        document.querySelectorAll('[data-config-name]').forEach((element) => {
+          element.addEventListener('input', () => {
+            const metric = getMetricById(element.dataset.configName);
+            if (!metric) return;
+            metric.name = element.value;
+            persist(true);
+            render();
+            renderConfig();
+          });
+        });
+
+        document.querySelectorAll('[data-config-category]').forEach((element) => {
+          element.addEventListener('change', () => {
+            const metric = getMetricById(element.dataset.configCategory);
+            if (!metric) return;
+            metric.category = element.value;
+            ensureSelectedTrendMetric();
+            persist(false, '指标分类已更新');
+            render();
+            renderConfig();
+          });
+        });
+
+        document.querySelectorAll('[data-config-type]').forEach((element) => {
+          element.addEventListener('change', () => {
+            const metric = getMetricById(element.dataset.configType);
+            if (!metric) return;
+            metric.type = element.value;
+            ensureSelectedTrendMetric();
+            persist(false, '指标类型已更新');
+            render();
+            renderConfig();
+          });
+        });
+
+        document.querySelectorAll('[data-config-delete]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const metricId = button.dataset.configDelete;
+            const metric = getMetricById(metricId);
+            if (!metric) return;
+            if (!window.confirm(`确认删除指标“${metric.name}”吗？`)) return;
+            state.metrics = state.metrics.filter((item) => item.id !== metricId);
+            Object.values(state.records).forEach((record) => {
+              if (record.values && metricId in record.values) delete record.values[metricId];
+            });
+            ensureSelectedTrendMetric();
+            persist(false, '指标已删除');
+            render();
+            renderConfig();
+          });
+        });
+      }
+
+      function renderCategoryOptions(selected) {
+        return Object.entries(CATEGORY_META)
+          .map(([value, meta]) => `<option value="${value}" ${selected === value ? 'selected' : ''}>${meta.label}</option>`)
+          .join('');
+      }
+
+      function renderTypeOptions(selected) {
+        return Object.entries(TYPE_META)
+          .map(([value, meta]) => `<option value="${value}" ${selected === value ? 'selected' : ''}>${meta.label}</option>`)
+          .join('');
+      }
+
+      function openModal(modal) {
+        modal.classList.add('open');
+      }
+
+      function closeModal(modal) {
+        modal.classList.remove('open');
+      }
+
+      function exportData() {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `fire-atlas-${currentMonth}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('已导出 JSON 备份');
+      }
+
+      function createLargeChartSvg(metric, series) {
+        const width = 920;
+        const height = 320;
+        const padding = { top: 24, right: 26, bottom: 42, left: 60 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        const values = series.map((item) => Number(item.value));
+        let min = Math.min(...values);
+        let max = Math.max(...values);
+        if (min === max) { min -= 1; max += 1; }
+        const points = series.map((item, index) => {
+          const x = padding.left + (series.length === 1 ? chartWidth / 2 : (chartWidth / (series.length - 1)) * index);
+          const y = padding.top + ((max - Number(item.value)) / (max - min)) * chartHeight;
+          return { x, y, month: item.month, value: Number(item.value) };
+        });
+        const line = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+        const area = `${line} L ${points[points.length - 1].x.toFixed(2)} ${(height - padding.bottom).toFixed(2)} L ${points[0].x.toFixed(2)} ${(height - padding.bottom).toFixed(2)} Z`;
+        const gridLines = Array.from({ length: 5 }, (_, index) => {
+          const ratio = index / 4;
+          const y = padding.top + chartHeight * ratio;
+          const value = max - (max - min) * ratio;
+          return `
+            <g>
+              <line x1="${padding.left}" y1="${y.toFixed(2)}" x2="${(width - padding.right).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(148,163,184,0.22)" stroke-dasharray="4 6"></line>
+              <text x="${padding.left - 12}" y="${(y + 4).toFixed(2)}" text-anchor="end" fill="#64748b" font-size="12">${escapeHtml(formatMetricValue(metric, value))}</text>
+            </g>
+          `;
+        }).join('');
+        const xLabels = points.map((point, index) => {
+          const shouldShow = points.length <= 6 || index === 0 || index === points.length - 1 || index % Math.ceil(points.length / 6) === 0;
+          if (!shouldShow) return '';
+          return `<text x="${point.x.toFixed(2)}" y="${(height - 14).toFixed(2)}" text-anchor="middle" fill="#64748b" font-size="12">${point.month.slice(2)}</text>`;
+        }).join('');
+        const dots = points.map((point) => `
+          <g>
+            <circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="5" fill="#ffffff" stroke="${CATEGORY_META[metric.category].color}" stroke-width="3"></circle>
+            <title>${point.month} · ${formatMetricValue(metric, point.value)}</title>
+          </g>
+        `).join('');
+        return `
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="${escapeHtml(metric.name)} 趋势图">
+            <defs>
+              <linearGradient id="area-${metric.id}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${CATEGORY_META[metric.category].color}" stop-opacity="0.22"></stop>
+                <stop offset="100%" stop-color="${CATEGORY_META[metric.category].color}" stop-opacity="0.02"></stop>
+              </linearGradient>
+            </defs>
+            ${gridLines}
+            <path d="${area}" fill="url(#area-${metric.id})"></path>
+            <path d="${line}" fill="none" stroke="${CATEGORY_META[metric.category].color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+            ${dots}
+            ${xLabels}
+          </svg>
+        `;
+      }
+
+      function createSparklineSvg(metric, series, color) {
+        const width = 280;
+        const height = 88;
+        const padding = 10;
+        const values = series.map((item) => Number(item.value));
+        let min = Math.min(...values);
+        let max = Math.max(...values);
+        if (min === max) { min -= 1; max += 1; }
+        const points = series.map((item, index) => {
+          const x = padding + (series.length === 1 ? (width - padding * 2) / 2 : ((width - padding * 2) / (series.length - 1)) * index);
+          const y = padding + ((max - Number(item.value)) / (max - min)) * (height - padding * 2);
+          return { x, y };
+        });
+        const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+        const area = `${path} L ${points[points.length - 1].x.toFixed(2)} ${(height - padding).toFixed(2)} L ${points[0].x.toFixed(2)} ${(height - padding).toFixed(2)} Z`;
+        const dots = points.length <= 10 ? points.map((point) => `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="3" fill="#fff" stroke="${color}" stroke-width="2"></circle>`).join('') : '';
+        return `
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="88" role="img" aria-label="${escapeHtml(metric.name)} sparkline">
+            <defs>
+              <linearGradient id="spark-${metric.id}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${color}" stop-opacity="0.18"></stop>
+                <stop offset="100%" stop-color="${color}" stop-opacity="0.01"></stop>
+              </linearGradient>
+            </defs>
+            <path d="${area}" fill="url(#spark-${metric.id})"></path>
+            <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+            ${dots}
+          </svg>
+        `;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function escapeAttribute(value) {
+        return escapeHtml(value).replace(/`/g, '&#96;');
+      }
+    })();
+  </script>
+</body>
+</html>
