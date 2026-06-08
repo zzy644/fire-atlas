@@ -233,6 +233,23 @@
       color: var(--text);
     }
 
+    /* ── 云端同步状态徽章 ── */
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: var(--muted-soft);
+      font-size: 12px;
+      font-weight: 600;
+      transition: color 0.3s, background 0.3s;
+    }
+    .sync-badge.synced  { color: #0f766e; }
+    .sync-badge.error   { color: var(--danger); }
+
     .btn.danger {
       background: rgba(220, 38, 38, 0.1);
       color: var(--danger);
@@ -962,6 +979,8 @@
             <button class="segment-btn" data-view="dashboard">汇总分析</button>
           </div>
           <div class="hero-toolbar">
+            <span id="syncStatus" class="sync-badge" title="云端同步状态">☁️ 同步中…</span>
+            <button id="importBtn" class="utility-btn ghost" type="button">📥 导入</button>
             <button id="openGoalBtn" class="utility-btn ghost">目标</button>
             <button id="openConfigBtn" class="utility-btn ghost">指标配置</button>
           </div>
@@ -985,6 +1004,7 @@
             </div>
             <button id="saveMonthBtn" class="btn primary" type="button">保存本月</button>
             <button id="clearMonthBtn" class="btn secondary" type="button">清除本月</button>
+            <button id="importBtn2" class="btn secondary" type="button">📥 导入</button>
           </div>
         </div>
         <div id="moduleStack" class="module-stack"></div>
@@ -1001,6 +1021,7 @@
           </div>
           <div class="compact-toolbar">
             <button id="exportBtn" class="btn primary" type="button">导出数据</button>
+            <button id="importBtn3" class="btn secondary" type="button">📥 导入</button>
           </div>
         </div>
         <div class="dashboard-controls">
@@ -1124,8 +1145,115 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
   <script>
     (() => {
+      /* ── Supabase 配置 ───────────────────────────── */
+      const SB_URL     = "https://biommhqjqpnozwkqwddi.supabase.co";
+      const SB_ANON_KEY = "sb_publishable_W0SY9bryhUSnQvRIsoWkZA_iyZidHZs";
+
+      const supabase = window.supabase.createClient(SB_URL, SB_ANON_KEY);
+
+      /* ── 获取当前用户 ID（优先用匿名 Session，fallback 到本地设备 ID）─ */
+      const DEVICE_KEY = "fire-atlas:device-id";
+      function getDeviceId() {
+        let id = localStorage.getItem(DEVICE_KEY);
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID()
+            : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+                const r = (Math.random() * 16) | 0;
+                return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+              });
+          localStorage.setItem(DEVICE_KEY, id);
+        }
+        return id;
+      }
+
+      /* 当前用户标识：匿名 Session（推荐）或降级为本地设备 ID */
+      function getUserId() {
+        const session = supabase.auth.session();
+        return session?.user?.id || getDeviceId();
+      }
+
+      /* ── 云端状态（后台静默同步）────────────────── */
+      let cloudState   = null;   // 云端最新快照
+      let cloudSyncing = false;
+      let cloudSynced  = false;  // 本次页面加载是否已完成首次同步
+
+      async function fetchCloudState() {
+        try {
+          const uid = getUserId();
+          const [recs, mets, prefs] = await Promise.all([
+            supabase.from("fire_records").select("month,values,memo,proud,adjust,updated_at").eq("user_id", uid),
+            supabase.from("fire_metrics").select("metrics,updated_at").eq("user_id", uid).single(),
+            supabase.from("fire_prefs").select("goal_config,ui_prefs,updated_at").eq("user_id", uid).single(),
+          ]);
+
+          const records = {};
+          if (recs.data) {
+            for (const r of recs.data) {
+              records[r.month] = { values: r.values || {}, memo: r.memo || "", proud: r.proud || "", adjust: r.adjust || "" };
+            }
+          }
+
+          cloudState = {
+            metrics:    mets.data ? mets.data.metrics    : null,
+            records,
+            goalConfig: prefs.data ? prefs.data.goal_config : null,
+            uiPrefs:    prefs.data ? prefs.data.ui_prefs    : null,
+          };
+          return cloudState;
+        } catch (err) {
+          console.warn("[fire-atlas] 云端拉取失败，将仅使用本地数据", err.message);
+          return null;
+        }
+      }
+
+      async function pushToCloud() {
+        if (cloudSyncing) return;
+        cloudSyncing = true;
+        updateSyncStatus();
+        try {
+          const uid = getUserId();
+          const { records, metrics } = state;
+
+          /* 月度记录按月 upsert */
+          const rows = Object.entries(records).map(([month, r]) => ({
+            user_id:   uid,
+            month,
+            values:    r.values  || {},
+            memo:      r.memo   || "",
+            proud:     r.proud  || "",
+            adjust:    r.adjust || "",
+            updated_at: new Date().toISOString(),
+          }));
+
+          if (rows.length) {
+            const { error: recErr } = await supabase
+              .from("fire_records")
+              .upsert(rows, { onConflict: "user_id,month" });
+            if (recErr) console.warn("[fire-atlas] 记录同步失败", recErr.message);
+          }
+
+          /* 指标配置 */
+          const { error: metErr } = await supabase
+            .from("fire_metrics")
+            .upsert({ user_id: uid, metrics, updated_at: new Date().toISOString() },
+                     { onConflict: "user_id" });
+          if (metErr) console.warn("[fire-atlas] 指标同步失败", metErr.message);
+
+          updateSyncStatus();
+        } catch (err) {
+          console.warn("[fire-atlas] 云端同步失败", err.message);
+          updateSyncStatus();
+        } finally {
+          cloudSyncing = false;
+        }
+      }
+
+      /* ── 本地存储键名 ─────────────────────────────── */
       const STORAGE_KEY = "fire-atlas-tracker-v3";
       const LEGACY_STORAGE_KEYS = [
         "monthly-metrics-public-site-v2",
@@ -1183,7 +1311,11 @@
       const monthPicker = document.getElementById("monthPicker");
       const saveMonthBtn = document.getElementById("saveMonthBtn");
       const clearMonthBtn = document.getElementById("clearMonthBtn");
-      const exportBtn = document.getElementById("exportBtn");
+      const exportBtn  = document.getElementById("exportBtn");
+      const importBtn  = document.getElementById("importBtn");
+      const importBtn2 = document.getElementById("importBtn2");
+      const importBtn3 = document.getElementById("importBtn3");
+      const syncStatus = document.getElementById("syncStatus");
       const viewSwitch = document.getElementById("viewSwitch");
       const entryView = document.getElementById("entryView");
       const dashboardView = document.getElementById("dashboardView");
@@ -1212,6 +1344,26 @@
       const toast = document.getElementById("toast");
 
       let state = loadState();
+
+      /* 页面启动时：先渲染本地数据（快），再异步拉云合并 */
+      (async () => {
+        /* 尝试匿名登录，获取持久化用户 ID（换设备会用新的匿名 ID）*/
+        await supabase.auth.signInAnonymously().catch(() => {});
+        const cloud = await fetchCloudState();
+        if (cloud) {
+          const prevState = state;
+          state = mergeCloudState(prevState);
+          /* 如果云端数据有新内容，自动回填 UI */
+          if (JSON.stringify(state) !== JSON.stringify(prevState)) {
+            ensureRecord(currentMonth);
+            syncRangeWithData();
+            renderGoalTable();
+            render();
+          }
+        }
+        cloudSynced = true;
+        updateSyncStatus();
+      })();
       let currentMonth = getCurrentMonthKey();
       let activeView = "entry";
       let selectedTrendMetricId = null;
@@ -1271,6 +1423,11 @@
         });
 
         exportBtn.addEventListener("click", exportData);
+
+        /* 三个导入按钮（工具栏 / 月度详情报表头 / 趋势探索报表头）共用同一逻辑 */
+        [importBtn, importBtn2, importBtn3].forEach((btn) => {
+          if (btn) btn.addEventListener("click", importJSON);
+        });
 
         openGoalBtn.addEventListener("click", () => openModal(goalModal));
         openConfigBtn.addEventListener("click", () => {
@@ -1332,6 +1489,38 @@
         return { metrics: clone(DEFAULT_METRICS), records: {} };
       }
 
+      /* ── 合并本地 & 云端数据 ───────────────────── */
+      function mergeCloudState(local) {
+        if (!cloudState) return local;
+
+        const merged = clone(local);
+
+        /* 以最新 updated_at 为准，合并记录 */
+        const allMonths = new Set([...Object.keys(merged.records), ...Object.keys(cloudState.records)]);
+        const mergedRecords = {};
+        for (const month of allMonths) {
+          const lc = merged.records[month];
+          const cr = cloudState.records[month];
+          if (!lc) { mergedRecords[month] = cr || null; continue; }
+          if (!cr) { mergedRecords[month] = lc; continue; }
+          /* 两边都有 —— 取 values 更多/更新的 */
+          mergedRecords[month] = {
+            values: { ...cr.values, ...lc.values },
+            memo:   lc.memo   || cr.memo,
+            proud:  lc.proud  || cr.proud,
+            adjust: lc.adjust || cr.adjust,
+          };
+        }
+        merged.records = mergedRecords;
+
+        /* 指标配置：以本地为准（用户本地配置优先）*/
+        if (cloudState.metrics && (!merged.metrics || !merged.metrics.length)) {
+          merged.metrics = cloudState.metrics;
+        }
+
+        return merged;
+      }
+
       function normalizeState(value) {
         return {
           metrics: Array.isArray(value.metrics) && value.metrics.length ? value.metrics : clone(DEFAULT_METRICS),
@@ -1342,6 +1531,8 @@
       function persist(silent, message) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         if (!silent) showToast(message || "已保存");
+        // 后台静默推云
+        pushToCloud().catch(() => {});
       }
 
       function showToast(message) {
@@ -1932,6 +2123,23 @@
         modal.classList.remove('open');
       }
 
+      /* ── 云端同步状态徽章 ── */
+      function updateSyncStatus() {
+        if (!syncStatus) return;
+        syncStatus.className = "sync-badge";
+        if (!cloudSynced) {
+          syncStatus.textContent = "☁️ 同步中…";
+        } else if (cloudSyncing) {
+          syncStatus.textContent = "☁️ 推送中…";
+        } else {
+          syncStatus.textContent = "☁️ 已同步";
+          syncStatus.classList.add("synced");
+          /* 2 秒后淡出文字，只留图标 */
+          setTimeout(() => { if (syncStatus) syncStatus.textContent = "☁️"; }, 2500);
+        }
+      }
+
+      /* ── 导出 JSON（手动备份）────────────────────── */
       function exportData() {
         const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -1941,6 +2149,52 @@
         link.click();
         URL.revokeObjectURL(url);
         showToast('已导出 JSON 备份');
+      }
+
+      /* ── 导入 JSON（从备份文件恢复）──────────────── */
+      function importJSON() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (!data || typeof data !== 'object') throw new Error('格式错误');
+
+            if (!window.confirm(
+              `确定要导入这份备份吗？\n\n` +
+              `📅 月度记录：${Object.keys(data.records || {}).length} 条\n` +
+              `📊 指标数量：${(data.metrics || []).length} 条\n\n` +
+              `导入后会与当前本地数据合并，并以备份数据优先。\n建议先点「导出数据」备份一次！`
+            )) return;
+
+            /* 合并：备份优先 */
+            const merged = clone(state);
+            if (data.records) {
+              for (const [month, rec] of Object.entries(data.records)) {
+                merged.records[month] = rec;
+              }
+            }
+            if (Array.isArray(data.metrics) && data.metrics.length) {
+              merged.metrics = data.metrics;
+            }
+
+            state = merged;
+            ensureRecord(currentMonth);
+            syncRangeWithData();
+            renderGoalTable();
+            render();
+            /* 同时推一次完整云端 */
+            pushToCloud().catch(() => {});
+            showToast('导入成功，数据已合并');
+          } catch (err) {
+            showToast('导入失败：' + (err.message || '文件格式错误'));
+          }
+        };
+        input.click();
       }
 
       function createLargeChartSvg(metric, series) {
