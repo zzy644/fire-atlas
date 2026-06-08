@@ -301,12 +301,12 @@
       display: block;
     }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-    }
+.summary-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 14px;
+margin-bottom: 18px;
+}
 
     .summary-card {
       border-radius: var(--radius-lg);
@@ -1772,6 +1772,16 @@
         };
       }
 
+      function getFreedomProgressValue(record) {
+        const netWorth = getNumericValue(record, "net_worth");
+        return netWorth === null ? null : netWorth / 500;
+      }
+
+      function formatFreedomProgress(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "--";
+        return `${(Number(value) * 100).toFixed(1)}%`;
+      }
+
       function getRangeMonths() {
         return getSortedMonths(false).filter((month) => month >= rangeStart && month <= rangeEnd);
       }
@@ -1845,12 +1855,20 @@
 
       function renderFocusSummary() {
         const record = state.records[currentMonth];
+        const freedomProgress = getFreedomProgressValue(record);
         const cards = [
           {
             metric: getMetricById("net_worth") || { type: "currency", category: "investment", name: "总资产净值" },
             value: getNumericValue(record, "net_worth"),
             label: "总资产净值",
             sub: "作为你的自由度底盘，优先看它是否稳定上行。"
+          },
+          {
+            metric: { type: "number", category: "investment", name: "自由进度" },
+            value: freedomProgress,
+            displayValue: formatFreedomProgress(freedomProgress),
+            label: "自由进度",
+            sub: "按总资产净值 / 500 计算，达到 100% 即完成 500W 目标。"
           },
           {
             metric: getMetricById("monthly_investment_profit") || { type: "currency", category: "investment", name: "本月投资收益" },
@@ -1877,7 +1895,7 @@
           return `
             <article class="summary-card ${category.className}">
               <div class="summary-label">${item.label}</div>
-              <div class="summary-value">${formatMetricValue(item.metric, item.value)}</div>
+              <div class="summary-value">${item.displayValue ?? formatMetricValue(item.metric, item.value)}</div>
               <div class="summary-sub">${item.sub}</div>
             </article>
           `;
